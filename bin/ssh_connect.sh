@@ -1,0 +1,3 @@
+#!/bin/bash 
+ECHO connecting... 
+ssh -i "~/.ssh/ec2" ec2-user@ec2-3-253-157-92.eu-west-1.compute.amazonaws.com

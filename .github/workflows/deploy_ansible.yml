@@ -13,6 +13,8 @@ jobs:
   deployment:
     runs-on: ubuntu-latest
     steps:
+    - name: Check repo
+      uses: actions/checkout@v1
     - name: Run playbook
       uses: dawidd6/action-ansible-playbook@v2
       with:

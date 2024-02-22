@@ -1,0 +1,94 @@
+---
+- hosts: webserver
+  become: true
+  remote_user: ubuntu
+  tasks:
+
+
+## task to copy src directory to server ##
+  - name: Copy src to server
+    copy:
+      src: "{{ project_source }}/src/"
+      dest: "{{ project_location }}"
+
+## task to copy requirements file to server ##
+  - name: Copy requirements.txt to server
+    copy:
+      src: "{{ project_source }}/requirements.txt"
+      dest: "{{ project_location }}"
+
+## debug prints ##
+  # - name: ls -d /tmp/ansible*
+  #   find:
+  #    paths: "{{ project_source }}"
+  #    recurse: yes
+  #   register: found_directories
+
+  # - debug:
+  #    msg: "{{ [item.path] }} "
+  #   with_items: "{{ found_directories.files }}"
+
+## task to add port 80 and 5000 to iptables ##
+  - name: Allow connections on multiple ports
+    ansible.builtin.iptables:
+      chain: INPUT
+      protocol: tcp
+      destination_ports:
+        - "80"
+        - "5000"
+      jump: ACCEPT
+    become: yes
+
+## task to add a routing rule from 80 to 5000 on iptables ##
+  - name: Forward port 80 to 5000
+    iptables:
+      table: nat
+      chain: PREROUTING
+      in_interface: eth0
+      protocol: tcp
+      match: tcp
+      destination_port: 80
+      jump: REDIRECT
+      to_ports: 5000
+      comment: Redirect web traffic to port 5000
+    become: yes
+
+## task to install python3-pip on server ##
+  - name: Update all packages to their latest version
+    apt:
+      update_cache: yes
+
+  - name: Install Python3-pip
+    apt:
+      name: python3-pip
+
+## task to pip install requirements ##
+  - name: Install python requirements
+    pip:
+      requirements: "{{ project_location }}/requirements.txt"
+      executable: pip3
+
+  - name: "Install supervisord"
+    become: true
+    apt:
+      name: supervisor
+      state: present
+      update_cache: yes
+
+  - name: "Start supervisord"
+    become: true
+    service:
+      name: "supervisor"
+      state: started
+      enabled: yes
+
+  - name: "Copy supervisord job file to remote"
+    template:
+      src: templates/run_proccess.j2
+      dest: "{{ supervisord_configs_path }}/run_process.conf"
+      owner: root
+
+  - name: "Start {{ program_name }}"
+    community.general.supervisorctl:
+      name: "{{ program_name }}"
+      state: restarted

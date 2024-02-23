@@ -88,7 +88,7 @@
       dest: "{{ supervisord_configs_path }}/run_process.conf"
       owner: root
 
-  - name: "Start {{ program_name }}"
+  - name: "Start Flask"
     community.general.supervisorctl:
-      name: "{{ program_name }}"
+      name: "Flask"
       state: restarted

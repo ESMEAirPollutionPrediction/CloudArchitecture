@@ -1,6 +1,6 @@
-[program:{{ program_name }}]
-command=python3 {{ server_file_name }}
+[program:Flask]
+command=flask --app flaskr run --host=0.0.0.0 --debug
 autostart=true
 directory={{ project_location }}
-stderr_logfile=/var/log/{{ program_name }}.err.log
-stdout_logfile=/var/log/{{ program_name }}.out.log
+stderr_logfile=/var/log/Flask.err.log
+stdout_logfile=/var/log/Flask.out.log

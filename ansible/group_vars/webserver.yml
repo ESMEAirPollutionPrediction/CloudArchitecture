@@ -2,6 +2,4 @@
 project_location: /home/ubuntu
 project_source: "../"
 supervisord_configs_path: /etc/supervisor/conf.d
-program_name: flask_server
 user: ubuntu
-server_file_name: server.py

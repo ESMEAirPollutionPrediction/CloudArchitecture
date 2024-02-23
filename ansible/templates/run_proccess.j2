@@ -1,6 +1,8 @@
 [program:Flask]
-command=flask --app flaskr run --host=0.0.0.0
+command=flask --app flaskr run --host=0.0.0.0 --port=80 --debug
 autostart=true
 directory={{ project_location }}
 stderr_logfile=/var/log/Flask.err.log
 stdout_logfile=/var/log/Flask.out.log
+logformat={asctime} {levelname} {message}
+logformatter=plaintext

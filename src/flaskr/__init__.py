@@ -7,7 +7,7 @@ from flask import Flask, render_template
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
-    
+
     log = logging.getLogger('werkzeug')
     # log.setLevel(logging.ERROR)
 
@@ -33,9 +33,11 @@ def create_app(test_config=None):
     def index():
         return render_template('index.html')
 
-    # a simple page that says hello
-    @app.route('/hello')
-    def hello():
-        return 'Hello, World!'
+    @app.route('/logs')
+    def logs():
+        logs_path = "/var/logs/Flask.err.log"
+        with open(logs_path) as f:
+            content = f.readlines()
+        return render_template('logs.html', content=content)
 
     return app

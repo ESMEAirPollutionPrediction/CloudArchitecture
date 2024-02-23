@@ -33,11 +33,11 @@ def create_app(test_config=None):
     def index():
         return render_template('index.html')
 
-    @app.route('/logs')
-    def logs():
-        logs_path = "/var/logs/Flask.err.log"
-        with open(logs_path) as f:
+    @app.route('/log')
+    def log():
+        log_path = "/var/log/Flask.err.log"
+        with open(log_path) as f:
             content = f.readlines()
-        return render_template('logs.html', content=content)
+        return render_template('log.html', content=content)
 
     return app

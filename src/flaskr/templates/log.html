@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-<html>
-    <body>
-
-        {% if content %}
-            {% for line in content %}
-                {{ line }}<br>
-            {% endfor %}
-        {% endif %}
-
-    </body>
-</html>
+{% extends 'base_layout.html' %}
+{% block body_content %}
+{% if content %}
+    {% for line in content %}
+        {{ line }}<br>
+    {% endfor %}
+{% endif %}
+{% endblock %}

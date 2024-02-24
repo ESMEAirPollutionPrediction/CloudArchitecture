@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+    {% block header %}
+    <head>
+        {% block header_content %}
+        {% endblock %}
+        <link rel="stylesheet" href={{ url_for('static', filename='style.css') }}>
+    </head>
+    {% endblock %}
+    {% block body %}
+    <body>
+        <!-- Site navigation menu -->
+        <ul class="mynavbar">
+            <li><a href="/">Home</a>
+            <li><a href="map">Map</a>
+            <li><a href="log">Logs</a>
+            <li><a href="test">Test</a>
+        </ul>
+        <h1 class="page_title">Predicting the air pollution in cities with Deep Learning</h1>
+
+        {% block body_content %}
+        {% endblock %}
+
+        <address>ESME - Kalani CHANFOUR, Laurent NOPOLY, Robin LOTODE - 2024</address>
+
+    </body>
+    {% endblock %}
+
+</html>

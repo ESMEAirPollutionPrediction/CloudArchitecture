@@ -1,4 +1,4 @@
 [webserver]
-54.78.197.134
+34.244.101.73
 [webserver:vars]
 ansible_ssh_common_args="-o StrictHostKeyChecking=no"

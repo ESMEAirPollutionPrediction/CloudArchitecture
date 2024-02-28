@@ -44,11 +44,7 @@ def create_app(test_config=None):
         header = m.get_root().header.render()
         body_html = m.get_root().html.render()
         script = m.get_root().script.render()
-        header = header.replace("""
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"/>"""
-                                , "")
-        print(header)
+
         return render_template('map.html',
             header=header,
             body_html=body_html,

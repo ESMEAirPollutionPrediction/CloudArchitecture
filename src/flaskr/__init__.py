@@ -1,6 +1,9 @@
 import os
 import logging
 import folium
+import pandas as pd
+from datetime import datetime
+import html
 
 from flask import Flask, render_template
 
@@ -36,19 +39,8 @@ def create_app(test_config=None):
 
     @app.route('/map')
     def map():
-        m = folium.Map(location=[47, 2.2137],
-                       zoom_start=6,
-                       width=800,
-                       height=600,)
-        m.get_root().render()
-        header = m.get_root().header.render()
-        body_html = m.get_root().html.render()
-        script = m.get_root().script.render()
-
         return render_template('map.html',
-            header=header,
-            body_html=body_html,
-            script=script,)
+            map=m.get_root()._repr_html_())
 
     @app.route('/log')
     def log():
@@ -60,5 +52,23 @@ def create_app(test_config=None):
     @app.route('/test')
     def test():
         return render_template('test.html')
+
+    # On Startup
+    with app.app_context():
+        print(datetime.now())
+    
+        metadata_emissions = pd.read_csv("src/data/metadata_20230717.csv")
+        maps = []
+        m = folium.Map(location=[47, 2.2137],
+                        zoom_start=6,)
+
+        stations_fg = folium.FeatureGroup(name="Stations").add_to(m)
+        for point in range(0, len(metadata_emissions)):
+            folium.CircleMarker((metadata_emissions.at[point, "Latitude"], metadata_emissions.at[point, "Longitude"]), 
+                                tooltip=html.escape(metadata_emissions.at[point, "Name"]), 
+                                radius=1.5,
+                                color="red",).add_to(stations_fg)
+        folium.LayerControl().add_to(m)
+        m.get_root().width = "75%"
 
     return app

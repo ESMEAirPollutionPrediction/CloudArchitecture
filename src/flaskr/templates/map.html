@@ -1,15 +1,12 @@
 {% extends 'base_layout.html' %}
-{% block header_content %}
-    {% if header %}
-        {{ header|safe }}
-    {% endif %}
+{% block head_content %}
+{% if head %}
+    {{ head|safe }}
+{% endif %}
 {% endblock %}
 {% block body_content %}
-    {% if body_html %}
-        <h2>France</h2>
-        {{ body_html|safe }}
-        <script>
-            {{ script|safe }}
-        </script>
-    {% endif %}
+{% if map %}
+    <h2>France</h2>
+    {{ map | safe }}
+{% endif %}
 {% endblock %}

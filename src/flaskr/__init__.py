@@ -57,7 +57,7 @@ def create_app(test_config=None):
     with app.app_context():
         print(datetime.now())
     
-        metadata_emissions = pd.read_csv("src/data/metadata_20230717.csv")
+        metadata_emissions = pd.read_csv("data/metadata_20230717.csv")
         maps = []
         m = folium.Map(location=[47, 2.2137],
                         zoom_start=6,)

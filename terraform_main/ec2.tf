@@ -12,6 +12,9 @@ provider "aws" {
 resource "aws_key_pair" "admin" {
   key_name   = "admin"
   public_key = file(var.aws_public_key_ssh_path)
+  tags = {
+    Name = var.tag_name
+  }
 }
 
 resource "aws_default_vpc" "default" {
@@ -41,6 +44,9 @@ resource "aws_default_security_group" "default" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+  tags = {
+    Name = var.tag_name
+  }
 }
 
 resource "aws_instance" "my-ec2" {
@@ -49,6 +55,9 @@ resource "aws_instance" "my-ec2" {
   key_name = aws_key_pair.admin.key_name
   # user_data = local.userdata
   depends_on = [ aws_key_pair.admin ]
+  tags = {
+    Name = var.tag_name
+  }
 }
 
 data "aws_eip" "eip" {

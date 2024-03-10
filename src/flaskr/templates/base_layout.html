@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
     {% block head %}
     <head>
         {% block head_content %}
+            <title>ESME Air Pollution Prediction</title>
         {% endblock %}
         <link rel="stylesheet" href={{ url_for('static', filename='style.css') }}>
+        <meta charset="UTF-8">
     </head>
     {% endblock %}
     {% block body %}
@@ -21,7 +23,9 @@
         {% block body_content %}
         {% endblock %}
 
-        <address>ESME - Kalani CHANFOUR, Laurent NOPOLY, Robin LOTODE - 2024</address>
+        <footer>
+            <span>ESME - Kalani CHANFOUR, Laurent NOPOLY, Robin LOTODE - 2024</span>
+        </footer>
 
     </body>
     {% endblock %}

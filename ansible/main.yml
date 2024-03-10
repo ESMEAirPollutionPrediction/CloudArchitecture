@@ -68,6 +68,13 @@
       requirements: "{{ project_location }}/requirements.txt"
       executable: pip3
 
+  - name: "Install awscli"
+    become: true
+    apt:
+      name: awscli
+      state: latest
+      update_cache: yes
+
   - name: "Install supervisord"
     become: true
     apt:

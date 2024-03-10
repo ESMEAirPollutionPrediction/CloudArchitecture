@@ -40,7 +40,8 @@ def create_app(test_config=None):
     @app.route('/map')
     def map():
         return render_template('map.html',
-            map=m.get_root()._repr_html_())
+            map=m
+        )
 
     @app.route('/log')
     def log():
@@ -52,13 +53,28 @@ def create_app(test_config=None):
     @app.route('/test')
     def test():
         return render_template('test.html')
+    
+    @app.route('/api/weather')
+    def api_weather():
+        stations_to_query = metadata_emissions[
+                (metadata_emissions["Municipality"].str.lower().str.contains("paris"))
+                & (metadata_emissions["Name"] != "Damparis")
+                ][[
+                    "Name",
+                    "Municipality",
+                    "Latitude",
+                    "Longitude"
+                ]]
+        result = {
+            "stations": stations_to_query.to_json()
+        }
+        return result
 
     # On Startup
     with app.app_context():
         print(datetime.now())
     
         metadata_emissions = pd.read_csv("data/metadata_20230717.csv")
-        maps = []
         m = folium.Map(location=[47, 2.2137],
                         zoom_start=6,)
 
@@ -70,5 +86,6 @@ def create_app(test_config=None):
                                 color="red",).add_to(stations_fg)
         folium.LayerControl().add_to(m)
         m.get_root().width = "75%"
+        m = m.get_root()._repr_html_()
 
     return app

@@ -1,9 +1,12 @@
 {% extends 'base_layout.html' %}
+
 {% block head_content %}
+<title>ESME Air Pollution Prediction Map</title>
 {% if head %}
     {{ head|safe }}
 {% endif %}
 {% endblock %}
+
 {% block body_content %}
 {% if map %}
     <h2>France</h2>

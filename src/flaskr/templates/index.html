@@ -1,4 +1,6 @@
 {% extends 'base_layout.html' %}
 {% block body_content %}
-    <h2>Index Page</h2>
+    {% if content %}
+        {{ content | safe }}
+    {% endif %}
 {% endblock %}

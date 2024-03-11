@@ -4,6 +4,8 @@ import folium
 import pandas as pd
 from datetime import datetime
 import html
+import requests
+import markdown
 
 from flask import Flask, render_template
 
@@ -12,8 +14,8 @@ def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
 
-    log = logging.getLogger('werkzeug')
-    # log.setLevel(logging.ERROR)
+    logger = logging.getLogger('werkzeug')
+    logger.setLevel(logging.INFO)
 
     app.config.from_mapping(
         SECRET_KEY='dev',
@@ -35,7 +37,8 @@ def create_app(test_config=None):
 
     @app.route('/')
     def index():
-        return render_template('index.html')
+        return render_template('index.html',
+            content=repository_readme)
 
     @app.route('/map')
     def map():
@@ -73,6 +76,8 @@ def create_app(test_config=None):
     # On Startup
     with app.app_context():
         print(datetime.now())
+
+        repository_readme = markdown.markdown(requests.get("https://raw.githubusercontent.com/ESMEAirPollutionPrediction/.github/main/profile/README.md").text)
     
         try: metadata_emissions = pd.read_csv("data/metadata_20230717.csv")
         except: metadata_emissions = pd.read_csv("src/data/metadata_20230717.csv")

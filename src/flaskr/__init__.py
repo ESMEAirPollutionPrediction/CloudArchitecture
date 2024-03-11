@@ -74,7 +74,11 @@ def create_app(test_config=None):
     with app.app_context():
         print(datetime.now())
     
-        metadata_emissions = pd.read_csv("data/metadata_20230717.csv")
+        try: metadata_emissions = pd.read_csv("data/metadata_20230717.csv")
+        except: metadata_emissions = pd.read_csv("src/data/metadata_20230717.csv")
+        metadata_emissions["ActivityBegin"] = pd.to_datetime(metadata_emissions["ActivityBegin"]).dt.strftime('%d-%m-%Y')
+        metadata_emissions["ActivityEnd"] = pd.to_datetime(metadata_emissions["ActivityEnd"]).dt.strftime('%d-%m-%Y')
+
         m = folium.Map(location=[47, 2.2137],
                         zoom_start=6,)
 
@@ -82,9 +86,23 @@ def create_app(test_config=None):
         for point in range(0, len(metadata_emissions)):
             folium.CircleMarker((metadata_emissions.at[point, "Latitude"], metadata_emissions.at[point, "Longitude"]), 
                                 tooltip=html.escape(metadata_emissions.at[point, "Name"]), 
-                                radius=1.5,
+                                popup=folium.Popup(
+                                    pd.DataFrame(metadata_emissions.loc[point][[
+                                        "NatlStationCode",
+                                        "Name",
+                                        "Municipality",
+                                        "ActivityBegin",
+                                        # "ActivityEnd",
+                                        "Longitude",
+                                        "Latitude",
+                                        "Altitude",
+                                    ]]).T.to_html(
+                                        classes="table table-striped table-hover table-condensed table-responsive"
+                                )),
+                                radius=2,
                                 color="red",).add_to(stations_fg)
         folium.LayerControl().add_to(m)
+        
         m.get_root().width = "75%"
         m = m.get_root()._repr_html_()
 

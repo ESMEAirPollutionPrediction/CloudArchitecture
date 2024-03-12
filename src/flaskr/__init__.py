@@ -87,7 +87,7 @@ def create_app(test_config=None):
 
         metadata_emissions[(metadata_emissions["Latitude"].between(-10, 60)) & 
                                 (metadata_emissions["Longitude"].between(-10, 60))]
-        
+
         m = folium.Map(location=[47, 2.2137],
                         zoom_start=6,)
 
@@ -118,4 +118,4 @@ def create_app(test_config=None):
     return app
     
 # To test it locally :
-# flask --app src/flaskr --debug
+# flask --app src/flaskr run --debug

@@ -77,13 +77,17 @@ def create_app(test_config=None):
     with app.app_context():
         print(datetime.now())
 
-        repository_readme = markdown.markdown(requests.get("https://raw.githubusercontent.com/ESMEAirPollutionPrediction/.github/main/profile/README.md").text)
+        repository_readme = markdown.markdown(requests.get(
+            "https://raw.githubusercontent.com/ESMEAirPollutionPrediction/.github/main/profile/README.md").text)
     
         try: metadata_emissions = pd.read_csv("data/metadata_20230717.csv")
         except: metadata_emissions = pd.read_csv("src/data/metadata_20230717.csv")
         metadata_emissions["ActivityBegin"] = pd.to_datetime(metadata_emissions["ActivityBegin"]).dt.strftime('%d-%m-%Y')
         metadata_emissions["ActivityEnd"] = pd.to_datetime(metadata_emissions["ActivityEnd"]).dt.strftime('%d-%m-%Y')
 
+        metadata_emissions[(metadata_emissions["Latitude"].between(-10, 60)) & 
+                                (metadata_emissions["Longitude"].between(-10, 60))]
+        
         m = folium.Map(location=[47, 2.2137],
                         zoom_start=6,)
 
@@ -112,3 +116,6 @@ def create_app(test_config=None):
         m = m.get_root()._repr_html_()
 
     return app
+    
+# To test it locally :
+# flask --app src/flaskr --debug

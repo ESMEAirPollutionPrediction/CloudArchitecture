@@ -1,11 +1,17 @@
 import os
 import logging
-import folium
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 import html
 import requests
 import markdown
+import folium
+from folium.plugins import GroupedLayerControl
+import matplotlib.pyplot as plt
+from io import BytesIO
+import base64
+import matplotlib
+import boto3
 
 from flask import Flask, render_template
 
@@ -35,6 +41,8 @@ def create_app(test_config=None):
     except OSError:
         pass
 
+    # matplotlib.use("agg")
+
     @app.route('/')
     def index():
         return render_template('index.html',
@@ -59,25 +67,17 @@ def create_app(test_config=None):
     
     @app.route('/api/weather')
     def api_weather():
-        stations_to_query = metadata_emissions[
-                (metadata_emissions["Municipality"].str.lower().str.contains("paris"))
-                & (metadata_emissions["Name"] != "Damparis")
-                ][[
-                    "Name",
-                    "Municipality",
-                    "Latitude",
-                    "Longitude"
-                ]]
-        print(stations_to_query, stations_to_query.shape)
-        result = {
-            "stations": stations_to_query.to_json()
-        }
-        return result
+        return api_weather_result
+
+    # Settings
+    do_predictions = True
 
     # On Startup
     with app.app_context():
-        print(datetime.now())
+        print(f"{datetime.now()}: server starting...")
 
+        today = datetime.date(datetime.today() - timedelta(days=1))
+        print(today)
         repository_readme = markdown.markdown(requests.get(
             "https://raw.githubusercontent.com/ESMEAirPollutionPrediction/.github/main/profile/README.md").text)
     
@@ -90,10 +90,23 @@ def create_app(test_config=None):
                                 (metadata_emissions["Longitude"].between(-10, 60))]
         metadata_emissions = metadata_emissions[metadata_emissions["ActivityEnd"].isna()].reset_index(drop=True)
 
+        stations_to_query = metadata_emissions[
+                (metadata_emissions["Municipality"].str.lower().str.contains("paris"))
+                & (metadata_emissions["Name"] != "Damparis")
+                ][[
+                    "Name",
+                    "Municipality",
+                    "Latitude",
+                    "Longitude"
+                ]]
+        api_weather_result = {
+            "stations": stations_to_query.to_json()
+        }
+
         m = folium.Map(location=[47, 2.2137],
                         zoom_start=6,)
-
-        stations_fg = folium.FeatureGroup(name="Stations").add_to(m)
+        
+        stations_fg = folium.FeatureGroup(name="All Station Informations").add_to(m)
         for point in range(0, len(metadata_emissions)):
             folium.CircleMarker((metadata_emissions.at[point, "Latitude"], metadata_emissions.at[point, "Longitude"]), 
                                 tooltip=html.escape(metadata_emissions.at[point, "Name"]), 
@@ -110,13 +123,67 @@ def create_app(test_config=None):
                                     ]]).T.to_html(
                                         classes="table table-striped table-hover table-condensed table-responsive"
                                 )),
-                                radius=2,
-                                color="red",).add_to(stations_fg)
-        folium.LayerControl().add_to(m)
+                                radius=2 if metadata_emissions.at[point, "Name"] in (stations_to_query["Name"].unique()) else 0.01,
+                                color="red" if metadata_emissions.at[point, "Name"] in (stations_to_query["Name"].unique()) else "blue",
+                                ).add_to(stations_fg)
         
+        predictions_fg_list = []
+        if do_predictions:
+            for polluant in ["O3", "PM10", "PM2.5", "NO", "NO2", "NOX as NO2", "SO2", "CO", "C6H6"]:
+                # try: predictions_df = pd.read_csv(f"s3://esme-pollution-bucket/predictions/prediction_{polluant}_{today}.csv")
+                try: predictions_df = pd.read_csv(f"src/data/prediction_{polluant}_{today}.csv")
+                except: 
+                    logging.error(f"couldn't find files for day {today}")
+                    predictions_df = pd.read_csv(f"src/data/prediction_{polluant}_2024-03-12.csv")
+                    today = datetime.date(2024, 3, 12)
+                predictions_df = predictions_df.merge(metadata_emissions[["Latitude", "Longitude", "Name", "Municipality"]], on=["Latitude", "Longitude"], how="left")
+                predictions_df["date"] = pd.to_datetime(predictions_df["date"])
+                predictions_fg = folium.FeatureGroup(name=f"Predictions {polluant} {today}").add_to(m)
+                predictions_fg_list += [predictions_fg]
+                for point in range(0, len(metadata_emissions)):
+                    if metadata_emissions.at[point, "Name"] in (predictions_df["Name"].unique()): # and metadata_emissions.at[point, "Name"] == "Bld peripherique Est":
+                        popup_html = pd.DataFrame(metadata_emissions.loc[point][[
+                            "NatlStationCode",
+                            "Name",
+                            "Municipality",
+                            "ActivityBegin",
+                            # "ActivityEnd",
+                            "Longitude",
+                            "Latitude",
+                            "Altitude",
+                        ]]).T.to_html(
+                            classes="table table-striped table-hover table-condensed table-responsive"
+                        )
+                        predictions_df[predictions_df["Name"] == metadata_emissions.at[point, "Name"]].plot(
+                            x="date",
+                            y="valeur brute",
+                            figsize=(10, 5)
+                        )
+                        plt.title(f"{polluant} forecasts at Station {metadata_emissions.at[point, 'Name']}")
+                        plt.xticks(rotation=45)
+                        plt.tight_layout()
+                        tmpfile = BytesIO()
+                        plt.savefig(tmpfile, format="png")
+                        encoded = base64.b64encode(tmpfile.getvalue()).decode('utf-8')
+                        popup_html += f"<img src='data:image/png;base64,{encoded}'>"
+                        popup_iframe = folium.IFrame(popup_html, width="500", height="auto")
+                        folium.CircleMarker((metadata_emissions.at[point, "Latitude"], metadata_emissions.at[point, "Longitude"]), 
+                                            tooltip=html.escape(metadata_emissions.at[point, "Name"]), 
+                                            popup=folium.Popup(popup_html),
+                                            radius=2,
+                                            color="red",
+                                            ).add_to(predictions_fg)
+                    plt.close()
+
+        folium.LayerControl(collapsed=True).add_to(m)
+        GroupedLayerControl(
+            groups={"Select your data :": [stations_fg] + predictions_fg_list},
+            collapsed=False
+        ).add_to(m)
         m.get_root().width = "75%"
         m = m.get_root()._repr_html_()
 
+        print(f"{datetime.now()}: server ready")
     return app
     
 # To test it locally :

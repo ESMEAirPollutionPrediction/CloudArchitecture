@@ -3,3 +3,4 @@ folium
 pandas
 markdown
 matplotlib
+boto3

@@ -131,10 +131,10 @@ def create_app(test_config=None):
         if do_predictions:
             for polluant in ["O3", "PM10", "PM2.5", "NO", "NO2", "NOX as NO2", "SO2", "CO", "C6H6"]:
                 # try: predictions_df = pd.read_csv(f"s3://esme-pollution-bucket/predictions/prediction_{polluant}_{today}.csv")
-                try: predictions_df = pd.read_csv(f"src/data/prediction_{polluant}_{today}.csv")
+                try: predictions_df = pd.read_csv(f"data/prediction_{polluant}_{today}.csv")
                 except: 
                     logging.error(f"couldn't find files for day {today}")
-                    predictions_df = pd.read_csv(f"src/data/prediction_{polluant}_2024-03-12.csv")
+                    predictions_df = pd.read_csv(f"data/prediction_{polluant}_2024-03-12.csv")
                     today = datetime.date(2024, 3, 12)
                 predictions_df = predictions_df.merge(metadata_emissions[["Latitude", "Longitude", "Name", "Municipality"]], on=["Latitude", "Longitude"], how="left")
                 predictions_df["date"] = pd.to_datetime(predictions_df["date"])

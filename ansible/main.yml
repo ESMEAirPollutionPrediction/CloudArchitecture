@@ -95,7 +95,12 @@
       dest: "{{ supervisord_configs_path }}/run_process.conf"
       owner: root
 
+  -name: "Execute update predictions script"
+    become: true
+    shell: get_predictions.sh
+
   - name: "Start Flask"
     community.general.supervisorctl:
       name: "Flask"
       state: restarted
+

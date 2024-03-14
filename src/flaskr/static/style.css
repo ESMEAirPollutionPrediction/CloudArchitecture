@@ -1,9 +1,13 @@
 body {
-  background-color: #9ca3af;
+  background-color: #282828;
   color: whitesmoke;
   font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
   padding-left: 18em;
-  }
+}
+
+h2 {
+  color: azure;
+}
 
 ul.mynavbar {
   list-style-type: none;
@@ -19,7 +23,7 @@ ul.mynavbar {
 }
 
 ul.mynavbar li {
-  background: white;
+  background: dimgrey;
   margin: 0.5em 0;
   padding: 0.3em;
   border-right: 1em solid black;
@@ -27,15 +31,21 @@ ul.mynavbar li {
 }
 
 ul.mynavbar a {
-  text-decoration: none }
+  text-decoration: none;
+}
+
 a:link {
-  color: blue }
+  color: chartreuse;
+}
+
 a:visited {
-  color: blue }
+  color: chartreuse;
+}
+
   
 .page_title {
     color: red;
-  }
+}
 
 address {
   position: absolute;

@@ -1,7 +1,7 @@
 import os
 import logging
 import pandas as pd
-from datetime import datetime, timedelta
+import datetime
 import html
 import requests
 import markdown
@@ -12,11 +12,27 @@ from io import BytesIO
 import base64
 import matplotlib
 import boto3
+from logging.config import dictConfig
 
 from flask import Flask, render_template
 
 
 def create_app(test_config=None):
+    dictConfig({
+    'version': 1,
+    'formatters': {'default': {
+        'format': '[%(asctime)s] %(levelname)s: %(message)s',
+    }},
+    'handlers': {'wsgi': {
+        'class': 'logging.StreamHandler',
+        'stream': 'ext://flask.logging.wsgi_errors_stream',
+        'formatter': 'default'
+    }},
+    'root': {
+        'level': 'INFO',
+        'handlers': ['wsgi']
+    }
+})
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
 
@@ -61,10 +77,6 @@ def create_app(test_config=None):
             content = f.readlines()
         return render_template('log.html', content=content)
     
-    @app.route('/test')
-    def test():
-        return render_template('test.html')
-    
     @app.route('/api/weather')
     def api_weather():
         return api_weather_result
@@ -74,10 +86,10 @@ def create_app(test_config=None):
 
     # On Startup
     with app.app_context():
-        print(f"{datetime.now()}: server starting...")
+        app.logger.info(f"server starting...")
 
-        today = datetime.date(datetime.today() - timedelta(days=1))
-        print(today)
+        today = datetime.datetime.date(datetime.datetime.today() - datetime.timedelta(days=1))
+
         repository_readme = markdown.markdown(requests.get(
             "https://raw.githubusercontent.com/ESMEAirPollutionPrediction/.github/main/profile/README.md").text)
     
@@ -123,7 +135,9 @@ def create_app(test_config=None):
                                     ]]).T.to_html(
                                         classes="table table-striped table-hover table-condensed table-responsive"
                                 )),
-                                radius=2 if metadata_emissions.at[point, "Name"] in (stations_to_query["Name"].unique()) else 0.01,
+                                radius=3,# if metadata_emissions.at[point, "Name"] in (stations_to_query["Name"].unique()) else 0.01,
+                                fill=True,
+                                fillOpacity=0.8,
                                 color="red" if metadata_emissions.at[point, "Name"] in (stations_to_query["Name"].unique()) else "blue",
                                 ).add_to(stations_fg)
         
@@ -131,9 +145,10 @@ def create_app(test_config=None):
         if do_predictions:
             for polluant in ["O3", "PM10", "PM2.5", "NO", "NO2", "NOX as NO2", "SO2", "CO", "C6H6"]:
                 # try: predictions_df = pd.read_csv(f"s3://esme-pollution-bucket/predictions/prediction_{polluant}_{today}.csv")
-                try: predictions_df = pd.read_csv(f"data/prediction_{polluant}_{today}.csv")
+                try: 
+                    predictions_df = pd.read_csv(f"data/prediction_{polluant}_{today}.csv")
                 except: 
-                    logging.error(f"couldn't find files for day {today}")
+                    app.logger.error(f"couldn't find files for day {today}")
                     predictions_df = pd.read_csv(f"data/prediction_{polluant}_2024-03-12.csv")
                     today = datetime.date(2024, 3, 12)
                 predictions_df = predictions_df.merge(metadata_emissions[["Latitude", "Longitude", "Name", "Municipality"]], on=["Latitude", "Longitude"], how="left")
@@ -170,7 +185,9 @@ def create_app(test_config=None):
                         folium.CircleMarker((metadata_emissions.at[point, "Latitude"], metadata_emissions.at[point, "Longitude"]), 
                                             tooltip=html.escape(metadata_emissions.at[point, "Name"]), 
                                             popup=folium.Popup(popup_html),
-                                            radius=2,
+                                            radius=3,
+                                            fill=True,
+                                            fillOpacity=0.8,
                                             color="red",
                                             ).add_to(predictions_fg)
                     plt.close()
@@ -180,10 +197,10 @@ def create_app(test_config=None):
             groups={"Select your data :": [stations_fg] + predictions_fg_list},
             collapsed=False
         ).add_to(m)
-        m.get_root().width = "75%"
+        m.get_root().width = "80%"
         m = m.get_root()._repr_html_()
 
-        print(f"{datetime.now()}: server ready")
+        app.logger.info(f"server ready")
     return app
     
 # To test it locally :

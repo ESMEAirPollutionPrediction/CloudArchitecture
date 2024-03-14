@@ -75,6 +75,12 @@
       state: latest
       update_cache: yes
 
+  - name: "Execute update predictions script"
+    shell: |
+      chmod +x get_predictions.sh
+      chmod +x get_predictions_and_restart.sh
+      sudo ./get_predictions.sh
+
   - name: "Install supervisord"
     become: true
     apt:
@@ -94,10 +100,6 @@
       src: templates/run_proccess.j2
       dest: "{{ supervisord_configs_path }}/run_process.conf"
       owner: root
-
-  -name: "Execute update predictions script"
-    become: true
-    shell: get_predictions.sh
 
   - name: "Start Flask"
     community.general.supervisorctl:

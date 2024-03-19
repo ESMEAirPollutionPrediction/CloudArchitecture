@@ -70,12 +70,12 @@ def create_app(test_config=None):
             map=m
         )
 
-    @app.route('/log')
-    def log():
-        log_path = "/var/log/Flask.err.log"
-        with open(log_path) as f:
-            content = f.readlines()
-        return render_template('log.html', content=content)
+    # @app.route('/log')
+    # def log():
+    #     log_path = "/var/log/Flask.err.log"
+    #     with open(log_path) as f:
+    #         content = f.readlines()
+    #     return render_template('log.html', content=content)
     
     @app.route('/api/weather')
     def api_weather():
